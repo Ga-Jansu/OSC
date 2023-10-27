@@ -1,0 +1,15 @@
+if ax<0
+    then    ;exibe o sinal de menos e neg(AX)
+end if
+contador = 0
+REPEAT
+    dividir o quociente por 10
+    empilha o resto
+    +1 contador
+while(quociente!=0)
+PRINT
+    desempilha
+    transforma em caracter
+    imprime
+while(contador!=0)
+

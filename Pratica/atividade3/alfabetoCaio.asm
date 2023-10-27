@@ -1,0 +1,31 @@
+TITLE albafeto
+.MODEL SMALL
+.STACK 100h
+
+.CODE
+main proc
+    MOV BL,64
+    MOV BH,96
+MAIUSCULAS:
+    INC BL
+    MOV AH,02
+    MOV DL,BL
+    INT 21H
+    CMP BL,90
+    JBE MINUSCULAS
+    
+MINUSCULAS:
+    INC BH
+    MOV AH,02
+    MOV DL,BH
+    INT 21H
+    MOV AH,02
+    MOV DL,32
+    INT 21H
+    CMP BH,123
+    JB MAIUSCULAS 
+
+    MOV AH,4CH
+    INT 21H
+endp main
+END MAIN

@@ -1,0 +1,19 @@
+TITLE ativ2
+.MODEL SMALL
+.CODE
+main PROC
+    MOV AL,'t'
+    MOV BL,'h'
+    CMP AL,BL
+    JNA THEN
+    MOV DL,BL
+    JMP IMPRIME
+THEN:
+    MOV DL,AL
+IMPRIME:
+    MOV AH,02
+    INT 21H
+    MOV AH,4CH
+    INT 21H
+main ENDP
+END MAIN

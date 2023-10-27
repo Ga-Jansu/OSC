@@ -1,0 +1,28 @@
+.MODEL SMALL
+.DATA
+    LISTA DW 0,1,2,1,1,0,1,1,1,1
+    MSG DB 10,13,"Soma: $"
+    SOMATORIA DW ?
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    MOV CX,10
+    XOR AX,AX
+    XOR DI,DI
+    SOMA:
+        ADD AX,LISTA[DI]
+        ADD DI,2
+        LOOP SOMA
+    MOV SOMATORIA,AX
+    MOV AH,09
+    LEA DX,MSG
+    INT 21H
+    MOV AH,02
+    MOV DX,SOMATORIA
+    OR DX,30H
+    INT 21H
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+END MAIN

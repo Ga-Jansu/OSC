@@ -1,0 +1,90 @@
+Qual tipo quer?
+IF AL != 1,2,3
+THEN ERRO valor invalido, repeat
+
+Binario:
+    Limpa BX
+    Entra um caracter "0" ou "1"
+    WHILE caracter diferente de CR DO
+        Converte caracter para valor binário
+        Desloca BX 1 casa para a esquerda
+        Insere o valor binário lido no LSB de BX
+        Entra novo caracter
+    END_WHILE
+
+Decimal:
+    total = 0
+    negativo = FALSO
+    ler um caractere
+
+    CASE caractere IS
+        ‘ - ‘ : negativo = VERDADEIRO e ler um caractere
+        ‘ + ‘ : ler um caractere
+    END_CASE
+
+    REPEAT
+        converter caractere em valor binário
+        total = 10 x total + valor binário
+        ler um caractere
+    UNTIL caractere é um carriage return (CR)
+    
+    IF negativo = VERDADEIRO
+        THEN total = - (total)
+    END_IF
+
+Hexadecimal:
+    Inicializa BX
+    Entra um caracter hexa
+    WHILE caracter diferente de CR DO
+        Converte caracter para binário
+        Desloca BX 4 casas para a esquerda
+        Insere valor binário nos 4 bits inferiores de BX
+        Entra novo caracter
+    END_WHILE
+
+
+Qual tipo quer para saida?
+IF AL != 1,2,3
+THEN ERRO valor invalido, repeat
+
+
+Binario:
+    FOR 16 vezes DO
+    rotação de BX à esquerda 1 casa binária (MSB vai para o CF)
+        IF CF = 1
+        THEN exibir no monitor caracter "1"
+        ELSE exibir no monitor caracter "0"
+        END_IF
+    END_FOR
+
+    
+
+Decimal:
+    IF AX < 0
+    THEN exibe um sinal de menos substitui-se AX pelo seu complemento de 2
+    END_IF
+    contador = 0
+    REPEAT
+        dividir quociente por 10
+        colocar o resto na pilha
+        contador = contador + 1
+    UNTIL quociente = 0
+    FOR contador vezes DO
+        retirar um resto (número) da pilha
+        converter para caracter ASCII
+        exibir o caracter no monitor
+    END_FOR
+
+
+
+Hexadecimal:
+    FOR 4 vezes DO
+        Mover BH para DL
+        Deslocar DL 4 casas para a direita
+        IF DL < 10
+            THEN converte para caracter na faixa 0 a 9
+            ELSE converte para caracter na faixa A a F
+        END_IF
+        Exibição do caracter no monitor de vídeo
+        Rodar BX 4 casas à esquerda
+    END_FOR
