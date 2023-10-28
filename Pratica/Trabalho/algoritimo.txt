@@ -1,0 +1,52 @@
+XOR SI,SI
+IF DL = 1{
+    SI =+ 10
+}ELSE{
+
+    IF DL = 2{
+        SI =+ 20
+    }ELSE{
+
+        IF DL = 3{
+            SI =+ 30
+        }ELSE{
+
+            IF DL = 4{
+                SI =+ 40
+            }
+        }
+    }
+}
+
+WHILE cx < 10{
+    ler caracter
+    guardar na string do vetor de posição do DL
+    loop
+}
+
+IF DL = 1{
+    CL = 0
+}ELSE{
+
+    IF DL = 2{
+        CL = 4
+    }ELSE{
+
+        IF DL = 3{
+            CL = 8
+        }ELSE{
+
+            IF DL = 4{
+                CL = 16
+            }
+        }
+    }
+}
+
+CH = 0
+SI = CH
+FOR{
+    Ler a nota
+    guardar na coluna CH da linha CL
+
+}
