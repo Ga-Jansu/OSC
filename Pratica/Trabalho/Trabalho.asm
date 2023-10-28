@@ -26,6 +26,7 @@ VOLTA_REGS MACRO
     POP CX
     POP DX
     ENDM
+   
 
 .STACK 100H
 .DATA
@@ -48,19 +49,20 @@ VOLTA_REGS MACRO
                 DB  10,13,9,9,'|    0 - Sair                     |'
                 DB  10,13,10,13,9,'Opcao escolhida: $'
 
-    Error_Menu  DB 'Opcao invalida, digite novamente!$'
+    Error_Menu DB 'Opcao invalida, digite novamente!$'
+    Error_Nota DB 'Nota invalida, digite novamente!$'
 
-    Inserir_Nome DB 'Nome do Aluno(Máximo 10 caracteres): $'
+    Inserir_Nome DB 'Nome do Aluno(Maximo 10 caracteres): $'
     Inserir_Nota DB 'Nota do Aluno: $'
 
 
 .CODE
 MAIN PROC
-    ;BL = contador da linha
+    ;CL = contador da linha
     MOV AX,@DATA
     MOV DS,AX
 
-    XOR BL,BL
+    XOR CL,CL
     
     CALL MENU
        
@@ -115,15 +117,41 @@ MENU ENDP
 
 INSERÇÃO PROC
     ;CH = Contador de coluna
-    ;CL = Contador de linha
-    ;
+    ;SI -> Linhas
+    ;CL = linha
+    PULA_LINHA
+    PULA_LINHA
 
-    XOR BX,BX
     XOR SI,SI
-
-
-
-
+    CALL VERF_VETOR
+    MOV AH,09
+    LEA DX,Inserir_Nome
+    INT 21H
+    XOR AL,AL
+    MOV CH,10
+    MOV AH,01
+    @Insere_Nome:
+        CMP CH,0
+        JZ @Insere_Meio
+        CMP AL,13
+        JE @Insere_Meio
+        INT 21H
+        MOV Nomes[SI],AL
+        DEC CH
+        JMP @Insere_Nome
+    @Insere_Meio:
+        PULA_LINHA
+        XOR SI,SI
+        CALL VERF_MATRIZ
+        XOR BX,BX
+        MOV CH,3
+    @Insere_Matriz:
+        CALL VERF_NOTA
+        MOV Notas[SI+BX],AL
+        INC BX
+        DEC CH
+        JNZ @Insere_Matriz
+    XOR AL,AL
     RET
 INSERÇÃO ENDP
 
@@ -144,6 +172,82 @@ IMPRESSÃO PROC
     
     RET
 IMPRESSÃO ENDP
+
+VERF_VETOR PROC
+    CMP CL,1
+    JNE @VERF_VETOR2
+    ADD SI,10
+    JMP @FIM_VERF_VETOR
+
+    @VERF_VETOR2:
+        CMP CL,2
+        JNE @VERF_VETOR3
+        ADD SI,20
+        JMP @FIM_VERF_VETOR
+
+    @VERF_VETOR3:
+        CMP CL,3
+        JNE @VERF_VETOR4
+        ADD SI,30
+        JMP @FIM_VERF_VETOR
+
+    @VERF_VETOR4:
+        CMP  CL,4
+        JNE @VERF_VETOR5
+        ADD SI,40
+        JMP @FIM_VERF_VETOR
+    @VERF_VETOR5:   ADD SI,50
+
+    @FIM_VERF_VETOR:    RET
+VERF_VETOR ENDP
+
+VERF_MATRIZ PROC
+    CMP CL,1
+    JNE @VERF_MATRIZ2
+    JMP @FIM_VERF_MATRIZ
+
+    @VERF_MATRIZ2:
+        CMP CL,2
+        JNE @VERF_MATRIZ3
+        ADD SI,4
+        JMP @FIM_VERF_MATRIZ
+
+    @VERF_MATRIZ3:
+        CMP CL,3
+        JNE @VERF_MATRIZ4
+        ADD SI,8
+        JMP @FIM_VERF_MATRIZ
+
+    @VERF_MATRIZ4:
+        CMP  CL,4
+        JNE @VERF_MATRIZ5
+        ADD SI,16
+        JMP @FIM_VERF_MATRIZ
+    @VERF_MATRIZ5:   ADD SI,32
+
+    @FIM_VERF_MATRIZ:    RET
+VERF_MATRIZ ENDP
+
+VERF_NOTA PROC
+    @VERF_NOTA:
+        PULA_LINHA
+        MOV AH,09
+        LEA DX,Inserir_Nota
+        INT 21H
+        MOV AH,01
+        INT 21H
+        CMP AL,'0'       ;Comparo com o '0', se nao for maior ou igual a 0 vai pedir de novo
+        JNGE @ERRO_NOTA
+        CMP AL,'9'        ;Comparo com o '9', se nao for menor ou igual a 6 vai pedir de novo
+        JNLE @ERRO_NOTA
+    RET
+    @ERRO_NOTA:
+        MOV AH,09
+        LEA DX,Error_Nota
+        INT 21H
+        JMP @VERF_NOTA
+VERF_NOTA ENDP
+
 END MAIN
 
 
