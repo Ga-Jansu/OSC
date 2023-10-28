@@ -40,14 +40,7 @@ VOLTA_REGS MACRO
 
     Medias DB 5 DUP(?)
 
-    DEZ DB '10$'
-
-    MSG_Menu    DB  10,13,9,'Digite a opcao que quer:'
-                DB  10,13,9,9,'|    1 - Insercao de novo aluno   |'
-                DB  10,13,9,9,'|    2 - Vizualizar  as notas     |'
-                DB  10,13,9,9,'|    3 - Corrigir uma nota        |'
-                DB  10,13,9,9,'|    0 - Sair                     |'
-                DB  10,13,10,13,9,'Opcao escolhida: $'
+    
 
     Error_Menu DB 'Opcao invalida, digite novamente!$'
     Error_Nota DB 'Nota invalida, digite novamente!$'
@@ -55,6 +48,12 @@ VOLTA_REGS MACRO
     Inserir_Nome DB 'Nome do Aluno(Maximo 10 caracteres): $'
     Inserir_Nota DB 'Nota do Aluno: $'
 
+     MSG_Menu    DB  'Digite a opcao que quer:'
+                DB  10,13,9,9,'|    1 - Insercao de novo aluno   |'
+                DB  10,13,9,9,'|    2 - Vizualizar  as notas     |'
+                DB  10,13,9,9,'|    3 - Corrigir uma nota        |'
+                DB  10,13,9,9,'|    0 - Sair                     |'
+                DB  10,13,10,13,9,'Opcao escolhida: $'
 
 .CODE
 MAIN PROC
@@ -74,6 +73,8 @@ MAIN ENDP
 MENU PROC
     EntMenu:
         PULA_LINHA
+        PULA_LINHA
+        TAB_LINHA
         MOV AH,09
         LEA DX,MSG_Menu
         INT 21H
@@ -119,6 +120,7 @@ INSERÇÃO PROC
     ;CH = Contador de coluna
     ;SI -> Linhas
     ;CL = linha
+    GUARDA_REGS
     PULA_LINHA
     PULA_LINHA
 
@@ -149,15 +151,32 @@ INSERÇÃO PROC
         CALL VERF_NOTA
         MOV Notas[SI+BX],AL
         INC BX
-        DEC CH
-        JNZ @Insere_Matriz
-    XOR AL,AL
+        CMP BX,3
+        JNE @Insere_Matriz
+    VOLTA_REGS
     RET
 INSERÇÃO ENDP
 
 Calculo_Media PROC
-
-
+    GUARDA_REGS
+    XOR SI,SI
+    CALL VERF_MATRIZ
+    XOR BX,BX
+    MOV CH,3
+    XOR AL,AL
+    @REPEAT_MEDIA:
+        MOV AH,Notas[SI+BX]
+        ADD AL,AH
+        INC BX
+        CMP BX,3
+        JNE @REPEAT_MEDIA
+    XOR AH,AH
+    DIV CH
+    XOR SI,SI
+    CALL VERF_VETOR
+    MOV Medias[SI],AL
+    VOLTA_REGS
+    INC CL
     RET
 Calculo_Media ENDP
 
@@ -168,7 +187,7 @@ CORREÇÃO PROC
 CORREÇÃO ENDP
 
 IMPRESSÃO PROC
-
+    
     
     RET
 IMPRESSÃO ENDP
@@ -176,27 +195,26 @@ IMPRESSÃO ENDP
 VERF_VETOR PROC
     CMP CL,1
     JNE @VERF_VETOR2
-    ADD SI,10
     JMP @FIM_VERF_VETOR
 
     @VERF_VETOR2:
         CMP CL,2
         JNE @VERF_VETOR3
-        ADD SI,20
+        ADD SI,10
         JMP @FIM_VERF_VETOR
 
     @VERF_VETOR3:
         CMP CL,3
         JNE @VERF_VETOR4
-        ADD SI,30
+        ADD SI,20
         JMP @FIM_VERF_VETOR
 
     @VERF_VETOR4:
         CMP  CL,4
         JNE @VERF_VETOR5
-        ADD SI,40
+        ADD SI,30
         JMP @FIM_VERF_VETOR
-    @VERF_VETOR5:   ADD SI,50
+    @VERF_VETOR5:   ADD SI,40
 
     @FIM_VERF_VETOR:    RET
 VERF_VETOR ENDP
@@ -229,7 +247,7 @@ VERF_MATRIZ PROC
 VERF_MATRIZ ENDP
 
 VERF_NOTA PROC
-    @VERF_NOTA:
+    @VERFI_NOTA:
         PULA_LINHA
         MOV AH,09
         LEA DX,Inserir_Nota
@@ -245,7 +263,7 @@ VERF_NOTA PROC
         MOV AH,09
         LEA DX,Error_Nota
         INT 21H
-        JMP @VERF_NOTA
+        JMP @VERFI_NOTA
 VERF_NOTA ENDP
 
 END MAIN
