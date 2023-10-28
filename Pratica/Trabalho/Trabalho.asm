@@ -1,4 +1,11 @@
 .MODEL SMALL
+PULA_LINHA MACRO
+        LEA DX, LINHA       ;Função para pular linha
+        MOV AH,9
+        INT 21H
+        ENDM
+    
+
 .STACK 100H
 .DATA
     Nomes   DB 10 DUP(?), 10 DUP(?),10 DUP(?), 10 DUP(?), 10 DUP(?)
@@ -37,16 +44,9 @@ MAIN PROC
         INT 21H
 MAIN ENDP
 
-PULA_LINHA PROC
-        LEA DX, LINHA       ;Função para pular linha
-        MOV AH,9
-        INT 21H
-        RET
-PULA_LINHA ENDP
-
 MENU PROC
     EntMenu:
-        CALL PULA_LINHA
+        PULA_LINHA
         MOV AH,09
         LEA DX,MSG_Menu
         INT 21H
@@ -82,7 +82,7 @@ MENU PROC
         MOV AH,09
         LEA DX,Error_Menu
         INT 21H
-        CALL PULA_LINHA
+        PULA_LINHA
         JMP EntMenu
 MENU ENDP
 
