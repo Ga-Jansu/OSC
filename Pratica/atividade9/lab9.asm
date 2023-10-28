@@ -1,4 +1,9 @@
 .MODEL SMALL
+PULA_LINHA MACRO
+        LEA DX, LINHA       ;Macro para pular linha
+        MOV AH,9
+        INT 21H
+        ENDM
 .STACK 100H
 .DATA       ;Mensagens para o usuario
     LINHA DB 10,13,'$'      
@@ -29,7 +34,7 @@ MAIN PROC
     @Ent3: CALL ENTHEXA     ;So da call na entrada de hexa
 
     MenuSaida:
-        CALL PULA_LINHA
+        PULA_LINHA
         LEA DX,MSG_SAIDA        ;Seto a MSG_Saida pra ja printar na fumção de Menu    
         CALL Menu
         CMP AL,'1'          ;Faço exatamente as mesmas verificações de entrada, unica difença é que vai para a saida de binario, decimal e hexadecimal
@@ -63,21 +68,13 @@ Menu PROC
     RET
 Menu ENDP
 
-
-PULA_LINHA PROC
-        LEA DX, LINHA       ;Função para pular linha
-        MOV AH,9
-        INT 21H
-        RET
-PULA_LINHA ENDP
-
 ;description
 ENTBINA PROC
     PUSH AX
     PUSH CX
     PUSH DX
-    CALL PULA_LINHA     ;Pula 2 linhas
-    CALL PULA_LINHA
+    PULA_LINHA     ;Pula 2 linhas
+    PULA_LINHA
     MOV AH,02       ;Printa um '?' dizendo q pode digitar
     MOV DL,'?'
     INT 21H
@@ -105,8 +102,8 @@ ENTDEC PROC
     PUSH AX
     PUSH CX
     PUSH DX
-    CALL PULA_LINHA     ;Pula 2 linhas
-    CALL PULA_LINHA
+    PULA_LINHA     ;Pula 2 linhas
+    PULA_LINHA
 
     MOV AH,09       
     LEA DX,SINAL
@@ -122,7 +119,7 @@ ENTDEC PROC
     CMP AL,'+'
     JE @POSITIVO
 
-    CALL PULA_LINHA1
+    PULA_LINHA
     MOV AH,02       ;Caso ele n digite nem + ou - so continua o codigo
     MOV DL,'?'      ;Printa um '?' dizendo q pode digitar
     INT 21H
@@ -131,7 +128,7 @@ ENTDEC PROC
     JMP @RepEntDec      ;Pula para a leitura
     @NEGATIVO: MOV CX,1     ;Se for negativo ele muda o registrador de sinal
     @POSITIVO:
-        CALL PULA_LINHA 
+        PULA_LINHA 
         MOV AH,02       ;Printa um '?' dizendo q pode digitar
         MOV DL,'?'
         INT 21H
@@ -166,8 +163,8 @@ ENTHEXA PROC
     PUSH AX
     PUSH CX
     PUSH DX
-    CALL PULA_LINHA     ;Pula 2 linhas
-    CALL PULA_LINHA
+    PULA_LINHA     ;Pula 2 linhas
+    PULA_LINHA
     MOV AH,02           ;Printa um '?' dizendo q pode digitar
     MOV DL,'?'
     INT 21H
@@ -204,8 +201,8 @@ SAIBINA PROC
     PUSH AX
     PUSH CX
     PUSH DX
-    CALL PULA_LINHA     ;Pula 2 linhas
-    CALL PULA_LINHA
+    PULA_LINHA     ;Pula 2 linhas
+    PULA_LINHA
 
     MOV CX,16       ;Seta o contador com 16
     MOV AH,02
@@ -232,8 +229,8 @@ SAIBINA ENDP
 SAIDEC PROC
     PUSH CX
     PUSH DX
-    CALL PULA_LINHA     ;Pula 2 linhas
-    CALL PULA_LINHA
+    PULA_LINHA     ;Pula 2 linhas
+    PULA_LINHA
 
     OR AX,AX        ;Verifica se AX é menor que 0
     JGE @AUX        ;Se for maior ele ja vai para printar
@@ -273,8 +270,8 @@ SAIHEXA PROC
     PUSH AX
     PUSH CX
     PUSH DX
-    CALL PULA_LINHA     ;Pula 2 linhas
-    CALL PULA_LINHA
+    PULA_LINHA     ;Pula 2 linhas
+    PULA_LINHA
 
     MOV CH,4        ;Seta o contador pra fazer printar 16 bits
     MOV CL,4        ;Seta o registrador como 4 para dar o ROL, para executar mais rapidamente
