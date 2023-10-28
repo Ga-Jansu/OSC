@@ -1,20 +1,16 @@
 .MODEL SMALL
 PULA_LINHA MACRO
-    GUARDA_REGS
-    MOV AH,02
-    MOV DL,10
-    INT 21H
-    MOV DL,13
-    INT 21H
-    VOLTA_REGS
-    ENDM
+        MOV AH,02
+        MOV DL,10
+        INT 21H
+        MOV DL,13
+        INT 21H
+        ENDM
 
 TAB_LINHA MACRO
-    GUARDA_REGS
     MOV AH,02
     MOV DL,9
     INT 21H
-    VOLTA_REGS
     ENDM
 
 GUARDA_REGS MACRO
@@ -25,12 +21,13 @@ GUARDA_REGS MACRO
     ENDM
 
 VOLTA_REGS MACRO
-    POP DX
-    POP CX
-    POP BX
     POP AX
+    POP BX
+    POP CX
+    POP DX
     ENDM
    
+
 .STACK 100H
 .DATA
     Nomes   DB 5*10 DUP(?)
@@ -63,27 +60,11 @@ MAIN PROC
     ;CL = contador da linha
     MOV AX,@DATA
     MOV DS,AX
-    XOR CL,CL
 
-    @RepMain:
-        CALL MENU
-        CMP AL,30H
-        JE FIM
-        CMP AL,31H
-        JNE @RepMain2
-        CALL INSERÇÃO
-        CALL Calculo_Media
-        JMP @Volta
-        @RepMain2:
-            CMP AL,32H
-            JNE @RepMain3
-            CALL IMPRESSÃO
-            JMP @Volta
-        @RepMain3: 
-            CMP AL,33H
-            CALL CORREÇÃO
-        @Volta: JMP @RepMain
+    XOR CL,CL
     
+    CALL MENU
+       
     FIM:
         MOV AH,4CH  ;Retorno ao DOS
         INT 21H
@@ -104,6 +85,24 @@ MENU PROC
     JA ErroMenu
     CMP AL,30H
     JL ErroMenu
+    JE @FimMenu
+
+    CMP AL,31H
+    JNE @RepMenu2
+    CALL INSERÇÃO
+    CALL Calculo_Media
+    JMP @Volta
+    @RepMenu2:
+        CMP AL,32H
+        JNE @RepMenu3
+        CALL IMPRESSÃO
+        JMP @Volta
+    @RepMenu3: 
+        CMP AL,33H
+        JNE @FimMenu
+        CALL CORREÇÃO
+
+    @Volta: JMP EntMenu
 
     @FimMenu:
         RET
@@ -119,8 +118,7 @@ MENU ENDP
 
 INSERÇÃO PROC
     ;CH = Contador de coluna
-    ;SI -> Linhas Vetor
-    ;DI -> Linhas Matriz
+    ;SI -> Linhas
     ;CL = linha
     GUARDA_REGS
     PULA_LINHA
@@ -145,12 +143,13 @@ INSERÇÃO PROC
         JMP @Insere_Nome
     @Insere_Meio:
         PULA_LINHA
-        XOR DI,DI
+        XOR SI,SI
         CALL VERF_MATRIZ
         XOR BX,BX
+        MOV CH,3
     @Insere_Matriz:
         CALL VERF_NOTA
-        MOV Notas[DI+BX],AL
+        MOV Notas[SI+BX],AL
         INC BX
         CMP BX,3
         JNE @Insere_Matriz
@@ -160,14 +159,13 @@ INSERÇÃO ENDP
 
 Calculo_Media PROC
     GUARDA_REGS
-    XOR DI,DI
+    XOR SI,SI
     CALL VERF_MATRIZ
     XOR BX,BX
     MOV CH,3
     XOR AL,AL
     @REPEAT_MEDIA:
-        MOV AH,Notas[DI+BX]
-        AND AH,0FH
+        MOV AH,Notas[SI+BX]
         ADD AL,AH
         INC BX
         CMP BX,3
@@ -176,7 +174,6 @@ Calculo_Media PROC
     DIV CH
     XOR SI,SI
     CALL VERF_VETOR
-    OR AL,30H
     MOV Medias[SI],AL
     VOLTA_REGS
     INC CL
@@ -190,60 +187,9 @@ CORREÇÃO PROC
 CORREÇÃO ENDP
 
 IMPRESSÃO PROC
-    ;AH -> PRINT
-    ;AL -> Contador de loop de fora
-    ;BX -> Colunas
-    ;CH -> Qtd Digitos Nome
-    ;CL -> "ALUNO"
-    ;DH -> Linha Media
-    ;DL  -> PRINT
-    ;SI -> Linhas Nomes
-    ;DI -> Linhas Matriz
     
-    GUARDA_REGS
-    XOR SI,SI   ;Contador do vetor
-    XOR DI,DI
-    XOR DH,DH
-    MOV AL,CL
-    Loop_Impressao:
-        MOV AH,02
-        PULA_LINHA
-        TAB_LINHA
-        CALL QTD_DIGITOS_NOME
-        MOV DH,CH
-        @Imprime_Nome:
-            MOV DL,Nomes[SI]
-            INT 21H
-            INC SI
-            DEC CH
-            JNZ @Imprime_Nome
-        TAB_LINHA
-        XOR BX,BX
-        ; @Imprime_Nota:
-        ;     MOV DL,Notas[DI+BX]
-        ;     INT 21H
-        ;     TAB_LINHA
-        ;     INC BX
-        ;     CMP BX,2
-        ;     JNE @Imprime_Nota
-        ; MOV AH,DH
-        ; XOR DX,DX
-        ; MOV DL,AH
-        ; MOV SI,DX
-        ; @Imprime_Media:
-        ;     MOV AH,02
-        ;     MOV DL,Medias[SI]
-        ;     INT 21H
-        ADD SI,10
-        MOV DX,SI
-        XCHG DH,DL
-        ADD DI,4
-        DEC AL
-        JZ @FIM_IMPRESSAO
-        JMP Loop_Impressao
-    @FIM_IMPRESSAO:
-        VOLTA_REGS
-        RET
+    
+    RET
 IMPRESSÃO ENDP
 
 VERF_VETOR PROC
@@ -281,21 +227,21 @@ VERF_MATRIZ PROC
     @VERF_MATRIZ2:
         CMP CL,2
         JNE @VERF_MATRIZ3
-        ADD DI,4
+        ADD SI,4
         JMP @FIM_VERF_MATRIZ
 
     @VERF_MATRIZ3:
         CMP CL,3
         JNE @VERF_MATRIZ4
-        ADD DI,8
+        ADD SI,8
         JMP @FIM_VERF_MATRIZ
 
     @VERF_MATRIZ4:
         CMP  CL,4
         JNE @VERF_MATRIZ5
-        ADD DI,16
+        ADD SI,16
         JMP @FIM_VERF_MATRIZ
-    @VERF_MATRIZ5:   ADD DI,32
+    @VERF_MATRIZ5:   ADD SI,32
 
     @FIM_VERF_MATRIZ:    RET
 VERF_MATRIZ ENDP
@@ -319,25 +265,6 @@ VERF_NOTA PROC
         INT 21H
         JMP @VERFI_NOTA
 VERF_NOTA ENDP
-
-QTD_DIGITOS_NOME PROC
-    PUSH BX
-    XOR CH,CH
-    MOV BH,10
-    @QTD_NUMEROS:
-        CMP Nomes[SI],'0'
-        JL @NAO_NUMERO
-        CMP Nomes[SI],'9'
-        JA @NAO_NUMERO
-        INC CH
-    @NAO_NUMERO:
-        INC SI
-        DEC BH
-        JNZ @QTD_NUMEROS
-    POP BX
-    RET
-QTD_DIGITOS_NOME ENDP
-
 
 END MAIN
 

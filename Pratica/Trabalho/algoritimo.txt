@@ -1,16 +1,53 @@
-IMPRESSAO:
-    DL  -> PRINT
-    CL -> "ALUNO"
+XOR SI,SI
 
-    SI , BX ->MANIPULA VETOR/MATRIZ
+    IF BL = 1{
+        SI =+ 10
+    }ELSE{
 
-    CALL  VERF_VETOR
-    MOV SI,CL
-    MOV CX,10
-    MOV AH,02
+        IF BL = 2{
+            SI =+ 20
+        }ELSE{
+
+            IF BL = 3{
+                SI =+ 30
+            }ELSE{
+
+                IF BL = 4{
+                    SI =+ 40
+                }
+            }
+        }
+    }
+
+WHILE ch < 10{
+    ler caracter
+    guardar na string do vetor de posição do DL
+    loop
+}
+
+        IF BL = 1{
+            CL = 0
+        }ELSE{
+
+            IF BL = 2{
+                CL = 4
+            }ELSE{
+
+                IF BL = 3{
+                    CL = 8
+                }ELSE{
+
+                    IF BL = 4{
+                        CL = 16
+                    }
+                }
+            }
+        }
+
+CH = 0
+SI = CH
 FOR{
-    MOV DL,Nomes[SI]
-    INT 21H
-    INC SI
-    LOOP FOR
+    Ler a nota
+    guardar na coluna CH da linha CL
+
 }
