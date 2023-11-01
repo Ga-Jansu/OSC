@@ -1,0 +1,4 @@
+.MODEL SMALL
+PULA_LINHA MACRO
+    
+    ENDM
