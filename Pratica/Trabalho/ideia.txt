@@ -1,0 +1,8 @@
+Fazer uma matriz grand para guardar os nomes, notas e media
+    Exemplo:
+
+        Nome:            P1      P2      P3      Media
+         Jose            5       6       4
+         Maria           5       6       4
+         Jose            5       6       4
+    ;Tudo sendo uma matriz com as colunas especificas para nome, notas e media
