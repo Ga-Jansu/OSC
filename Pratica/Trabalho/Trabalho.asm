@@ -98,12 +98,12 @@ MAIN PROC
         ENTER
         IMPRIME_MENU
         MOV AH,01
-        INT 21HJ
-        CMP DL,'0'
+        INT 21H
+        CMP DL,30H
         JE FIM_MAIN
-        JL ERRO_MAIN
-        CMP DL,'4'
-        JG ERRO_MAIN
+        JB ERRO_MAIN
+        CMP DL,33H
+        JA ERRO_MAIN
 
         JMP VOLTA_MAIN
     ERRO_MAIN:
