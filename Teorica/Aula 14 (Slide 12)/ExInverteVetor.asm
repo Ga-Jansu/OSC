@@ -9,15 +9,12 @@ MAIN PROC
     MOV DS,AX
     MOV ES,AX
     MOV CX,16
-    CLD
-    LEA SI,STR1
+    LEA SI,STR1+15
     LEA DI,STR2
-    CLD
-    MOV DI,15
+    STD
     REPEAT:
         MOVSB
-        DEC DI
-        INC SI
+        ADD DI,2
         LOOP REPEAT
     MOV AH,9
     LEA DX,STR2
