@@ -1,0 +1,36 @@
+.MODEL SMALL
+.STACK 100h
+.DATA
+    STRING1 DB 'ABCD'
+    STRING2 DB 'ABCD'
+    STRING3 DB 'ACDE'
+    NAOIGUAL DB 'As strings nao sao iguais!$'
+    IGUAL DB 'As strings sao iguais!$'
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    MOV ES,AX
+
+    CALL VERIGUAL
+
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+VERIGUAL PROC
+    MOV CX,4
+    MOV AH,09
+    CLD
+    LEA SI,STRING1
+    LEA DI,STRING3
+    REPE CMPSB
+    JZ SIM
+    LEA DX,NAOIGUAL
+    JMP FIM
+    SIM:
+        LEA DX,IGUAL
+    FIM: 
+        INT 21H
+        RET
+VERIGUAL ENDP
+END MAIN

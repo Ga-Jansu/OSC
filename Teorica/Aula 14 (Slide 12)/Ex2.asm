@@ -1,0 +1,23 @@
+.MODEL SMALL
+.DATA
+    ARR DW 31h,32h,34h,35h,36h,?,'$'
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    MOV ES,AX
+    STD
+    LEA SI,ARR+8
+    LEA DI,ARR+10
+    MOV CX,3
+    REP MOVSW
+    ;MOV WORD PTR [DI],33H
+    MOV AX,33H
+    STOSW
+    MOV AH,09
+    LEA DX,ARR
+    INT 21H
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+END MAIN

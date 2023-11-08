@@ -1,0 +1,25 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+    STR1 DB '! nesnaJ leirbaG'
+    STR2 DB 16 DUP(?),'$'
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    MOV ES,AX
+    MOV CX,16
+    LEA SI,STR1+15
+    LEA DI,STR2
+    STD
+    REPEAT:
+        MOVSB
+        ADD DI,2
+        LOOP REPEAT
+    MOV AH,9
+    LEA DX,STR2
+    INT 21H
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+END MAIN

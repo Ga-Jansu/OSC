@@ -1,120 +1,140 @@
 .MODEL SMALL
-.STACK 100h
-ENTER MACRO
-    PUSH AX
-    PUSH DX
+PULA_LINHA MACRO
+    GUARDA_2REG AX,DX
     MOV AH,02
     MOV DL,10
     INT 21H
     MOV DL,13
     INT 21H
-    POP DX
-    POP AX
+    SOLTA_2REG AX,DX
     ENDM
 TAB MACRO
-    PUSH AX
-    PUSH DX
+    GUARDA_2REG AX,DX
     MOV AH,02
     MOV DL,9
     INT 21H
-    POP DX
-    POP AX
+    SOLTA_2REG AX,DX
     ENDM
-GUARDAR_1 MACRO AUX
+GUARDA_1REG MACRO AUX
     PUSH AUX
     ENDM
-GUARDAR_2 MACRO AUX,AUX_2
+GUARDA_2REG MACRO AUX,AUX2
     PUSH AUX
-    PUSH AUX_2
+    PUSH AUX2
     ENDM
-GUARDAR_3 MACRO AUX,AUX_2,AUX_3
+GUARDA_3REG MACRO AUX,AUX2,AUX3
     PUSH AUX
-    PUSH AUX_2
-    PUSH AUX_3
+    PUSH AUX2
+    PUSH AUX3
     ENDM
-GUARDAR_4 MACRO AUX,AUX_2,AUX_3,AUX_4
+GUARDA_4REG MACRO AUX,AUX2,AUX3,AUX4
     PUSH AUX
-    PUSH AUX_2
-    PUSH AUX_3
-    PUSH AUX_4
+    PUSH AUX2
+    PUSH AUX3
+    PUSH AUX4
     ENDM
-SOLTA_1 MACRO AUX
+SOLTA_1REG MACRO AUX
     POP AUX
     ENDM
-SOLTA_2 MACRO AUX,AUX_2
+SOLTA_2REG MACRO AUX,AUX2
+    POP AUX2
     POP AUX
-    POP AUX_2
     ENDM
-SOLTA_3 MACRO AUX,AUX_2,AUX_3
+SOLTA_3REG MACRO AUX,AUX2,AUX3
+    POP AUX3
+    POP AUX2
     POP AUX
-    POP AUX_2
-    POP AUX_3
     ENDM
-SOLTA_4 MACRO AUX,AUX_2,AUX_3,AUX_4
+SOLTA_4REG MACRO AUX,AUX2,AUX3,AUX4
+    POP AUX4
+    POP AUX3
+    POP AUX2
     POP AUX
-    POP AUX_2
-    POP AUX_3
-    POP AUX_4
     ENDM
-IMPRIME_MENU MACRO
-    GUARDAR_2 AX,DX
-    MOV AH,09
-    LEA  DX,MENU
-    INT 21H
-    SOLTA_2 DX,AX
-    ENDM
+
 .DATA
-    NOMES DB 5*20 DUP(?)
-
-    NOTAS   DB 4 DUP(?)
-            DB 4 DUP(?)
-            DB 4 DUP(?)
-            DB 4 DUP(?)
-            DB 4 DUP(?)
+    Nomes   DB 25 DUP(?)
+            DB 25 DUP(?)
+            DB 25 DUP(?)
+            DB 25 DUP(?)
+            DB 25 DUP(?)
     
-    REGISTRO DB 0
+    Notas   DB 4 DUP(?)
+            DB 4 DUP(?)
+            DB 4 DUP(?)
+            DB 4 DUP(?)
+            DB 4 DUP(?)
 
-    MENU    DB 10,13,' Escolha uma opcao:'
-            DB 10,13,9, ' 1- Inserir um aluno novo (Maximo 5)'
-            DB 10,13,9, ' 2- Imprimir a lista de notas'
-            DB 10,13,9, ' 3- Corrigir alguma nota'
-            DB 10,13,9, ' 0- Finalizar o programa'
-            DB 10,13, ' Digite aqui: $'
-
-
-    ERROR_MENU DB 10,13,9,'Valor invalido digite novamente!$'
+    MSG_MENU    DB ' Escolha uma das opcoes: '
+                DB 10,13,9,' 1- Inserir um aluno'
+                DB 10,13,9,' 2- Corrigir a nota'
+                DB 10,13,9,' 3- Imprimir a tabela'
+                DB 10,13,9,' 0- Finalizar o programa'
+                DB 10,13,' Opcao escolhida: $'
     
-    TEMPLATE DB ' Nome:',9,9,'P1',9,9,'P2',9,9,'P3',9,9,'Media$'
+    MSG_CORRIGIR DB 'Digite o nome do aluno que deseja corrigir a nota, escreva exatamente!$'
 
-    MSG_INSERIR_NOME DB 10,13,9,'Insira o nome (maximo 20 caracteres): $'
-    MSG_INSERIR_NOTA DB 10,13,9,'Insira a nota: $'
+    MSG_INSERIR_NOME DB 'Nome (Max. 25): $'
 
-    MSG_CORRIGIR DB 10,13,9,'Digite o nome que deseja corrigir: $'
+    MSG_INSERIR_NOTA DB 'Nota: $'
+
+    MSG_IMPRESSAO DB 'Nome',9,'Nota P1',9,'Nota P2',9,'Nota P3',9,'Media$'
+
+    MSG_ERROR DB 9,'Numero digitado invalido!$'
 .CODE
 MAIN PROC
     MOV AX,@DATA
     MOV DS,AX
-    VOLTA_MAIN:
-        ENTER
-        IMPRIME_MENU
+    MOV ES,AX
+
+    REPEAT_MENU:
+        PULA_LINHA
+        MOV AH,09
+        LEA DX,MSG_MENU
+        INT 21H
         MOV AH,01
         INT 21H
-        CMP DL,30H
-        JE FIM_MAIN
-        JB ERRO_MAIN
-        CMP DL,33H
-        JA ERRO_MAIN
-
-        JMP VOLTA_MAIN
-    ERRO_MAIN:
+        PULA_LINHA
+        CMP AL,'0'
+        JL ERRO
+        JE FIM
+        CMP AL,'3'
+        JA ERRO
+        CMP AL,'1'
+        JNE @OPCAO2
+        CALL INSERIR_ALUNO
+        JMP REPEAT_MENU
+    @OPCAO2:
+        CMP AL,'2'
+        JNE @OPCAO3
+        CALL CORRIGIR_NOTAS
+        JMP REPEAT_MENU
+     @OPCAO3:
+        CALL IMPRIMIR_TABELA
+        JMP REPEAT_MENU
+    ERRO:
+        PULA_LINHA
+        PULA_LINHA
         MOV AH,09
-        LEA DX,ERROR_MENU
+        LEA DX,MSG_ERROR
         INT 21H
-        ENTER
-        JMP VOLTA_MAIN
-    FIM_MAIN:
+        PULA_LINHA
+        PULA_LINHA
+        JMP REPEAT_MENU
+    FIM:
         MOV AH,4CH
         INT 21H
 MAIN ENDP
 
+INSERIR_ALUNO PROC
+    RET
+INSERIR_ALUNO ENDP
+
+CORRIGIR_NOTAS PROC
+    RET
+CORRIGIR_NOTAS ENDP
+
+IMPRIMIR_TABELA PROC
+    RET
+IMPRIMIR_TABELA ENDP
 END MAIN
