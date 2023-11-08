@@ -35,6 +35,7 @@ LER PROC
     LEA DI,STRING
     MOV AH,01
     INT 21H
+    
     REPEAT:
         CMP AL,13
         JE FIM
