@@ -146,11 +146,6 @@ INSERIR_ALUNO PROC
     ;   CH -> Limitador de caracter
     PULA_LINHA          ;Pula 2 linhas
     PULA_LINHA
-    MOV CL,Cadastro_Aluno[0]    ;Verificalçao se atingiu o limite de alunos
-    CMP CL,5
-    JNGE @INSERIR
-    JMP @FIM_SEM_ESPAÇO
-    @INSERIR:
     CLD                 ;Seto o DF
     LEA DI,Nomes        ;Seto o DI
     LEA SI,Cadastro_Nome     ;Vejo em qual linha  estou  inserindo
@@ -207,7 +202,6 @@ INSERIR_ALUNO PROC
         DEC CH                  ;Decremento o contador limite
         JNZ @INSERIR_NOTA
     
-    INC Cadastro_Aluno[0]
     MOV CH,4
     ADD [SI],CH  ;Pulo o contador de linhas para a proxima linha
     PULA_LINHA
@@ -233,7 +227,43 @@ IMPRIMIR_TABELA PROC
     ; CH -> Contador Nome e  para as notas
     ; CL -> Contador para impressao
     ; BX -> Contador de linhas
-    
+    PULA_LINHA
+    PULA_LINHA
+    MOV AH,09
+    LEA DX,MSG_IMPRESSAO
+    INT 21H
+    XOR BX,BX
+    LEA SI,Cadastro_Aluno
+    MOV CL,[SI]
+    PULA_LINHA
+    @IMPRIME_GERAL:
+        MOV CH,20
+        LEA SI,Nomes
+        MOV AH,02
+        SPACE
+        CLD
+    @IMPRIME_NOME:
+        LODSB
+        MOV DL,AL
+        INT 21H
+        DEC CH
+        JNZ @IMPRIME_NOME
+
+    CALL CALCULO_MEDIA
+    MOV CH,4
+    XOR SI,SI
+
+    @IMPRIME_NOTA:
+        TAB
+        MOV DL,Notas[BX+SI]
+        OR DL,30H
+        INT 21H
+        INC SI
+        DEC CH
+        JNZ @IMPRIME_NOTA
+    ADD BX,4
+    DEC CL
+    JNZ @IMPRIME_GERAL
     RET
 IMPRIMIR_TABELA ENDP
 
