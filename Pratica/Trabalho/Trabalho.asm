@@ -15,6 +15,14 @@ TAB MACRO
     INT 21H
     SOLTA_2REG AX,DX
     ENDM
+SPACE MACRO
+    GUARDA_2REG AX,DX
+    MOV AH,02
+    MOV DL,20H
+    INT 21H
+    SOLTA_2REG AX,DX
+    ENDM
+
 GUARDA_1REG MACRO AUX
     PUSH AUX
     ENDM
@@ -52,12 +60,12 @@ SOLTA_4REG MACRO AUX,AUX2,AUX3,AUX4
     POP AUX
     ENDM
 .DATA
-    Nomes   DB 125 DUP(?)        ;Matriz nomes
-            ; 1 Nome - posição 0 ate 25
-            ; 2 Nome - posição 25 ate 50
-            ; 3 Nome - posição 50 ate 75
-            ; 4 Nome - posição 25 ate 100
-            ; 5 Nome - posição 100 ate 125
+    Nomes   DB 100 DUP(?)        ;Matriz nomes
+            ; 1 Nome - posição 0 ate 20
+            ; 2 Nome - posição 20 ate 40
+            ; 3 Nome - posição 40 ate 60
+            ; 4 Nome - posição 60 ate 80
+            ; 5 Nome - posição 80 ate 100
     
     Notas   DB 4 DUP(?)         ;Matriz notas + medias
             DB 4 DUP(?)
@@ -65,25 +73,33 @@ SOLTA_4REG MACRO AUX,AUX2,AUX3,AUX4
             DB 4 DUP(?)
             DB 4 DUP(?)
     
-    Cadastro_Nome DB ?           ;Contador de  insersão de  aluno (para saber em qual posição estou)
-    Cadastro_Nota DB ?           ;Contador de  insersão de  nota  (para saber em qual linha  estou)
+    Cadastro_Aluno DB 0         ;Contador de quantos alunos foram inseridos, para a impressao
+    Cadastro_Nome DB 0           ;Contador de  insersão de  aluno (para saber em qual posição estou, na string de Nome)
+    Cadastro_Nota DB 0           ;Contador de  insersão de  nota  (para saber em qual linha  estou da matriz)
+    Nome_Correcao DB 20 DUP(?)
 
     MSG_MENU    DB ' Escolha uma das opcoes: '
                 DB 10,13,9,' 1- Inserir um aluno'
-                DB 10,13,9,' 2- Corrigir a nota'
-                DB 10,13,9,' 3- Imprimir a tabela'
+                DB 10,13,9,' 2- Imprimir as notas'
+                DB 10,13,9,' 3- Corrigir as notas'
                 DB 10,13,9,' 0- Finalizar o programa'
                 DB 10,13,' Opcao escolhida: $'
     
     MSG_CORRIGIR DB 'Digite o nome do aluno que deseja corrigir a nota, escreva exatamente!$'
 
-    MSG_INSERIR_NOME DB 9,'Nome (Max. 25): $'
+    MSG_INSERIR_NOME DB 9,'Nome (Max. 20): $'
 
     MSG_INSERIR_NOTA DB 9,'Nota: $'
 
-    MSG_IMPRESSAO DB 'Nome',9,'Nota P1',9,'Nota P2',9,'Nota P3',9,'Media$'
+    MSG_IMPRESSAO DB ' Nome',9,9,'Nota P1',9,9,'Nota P2',9,9,'Nota P3',9,9,'Media$'
 
-    MSG_ERROR DB 9,'Numero digitado invalido!$'
+    MSG_CORRECAO DB '  Digite o nome do aluno que quer a correcao: $'
+
+    MSG_ERROR_NUMERO DB 9,'Numero digitado invalido!$'
+
+    MSG_ESPACO DB 9,'Limite  de 5 alunos atingido!$'
+
+    MSG_ERRO_NOME DB 9,'Nao tem nenhum aluno com esse nome!$'
 .CODE
 MAIN PROC
     MOV AX,@DATA
@@ -110,16 +126,16 @@ MAIN PROC
     @OPCAO2:
         CMP AL,'2'
         JNE @OPCAO3     ;Se nao for igual a 2, vai para a opção 3 automaticamente
-        CALL CORRIGIR_NOTAS     ;Se for 2, ja chama a função
+        CALL IMPRIMIR_TABELA     ;Se for 2, ja chama a função
         JMP REPEAT_MENU
      @OPCAO3:
-        CALL IMPRIMIR_TABELA        ;Consequentemente, chama a função para 3
+        CALL CORRIGIR_NOTAS       ;Consequentemente, chama a função para 3
         JMP REPEAT_MENU
     ERRO:
         PULA_LINHA
         PULA_LINHA
         MOV AH,09           ;Impressao mensagem erro
-        LEA DX,MSG_ERROR    
+        LEA DX,MSG_ERROR_NUMERO    
         INT 21H
         PULA_LINHA
         PULA_LINHA
@@ -135,13 +151,17 @@ INSERIR_ALUNO PROC
     ;   CH -> Limitador de caracter
     PULA_LINHA          ;Pula 2 linhas
     PULA_LINHA
+    CMP Cadastro_Aluno,2    ;Verificalçao se atingiu o limite de alunos
+    JNGE @INSERIR
+    JMP @FIM_SEM_ESPAÇO
+    @INSERIR:
     CLD                 ;Seto o DF
     LEA DI,Nomes        ;Seto o DI
     LEA SI,Cadastro_Nome     ;Vejo em qual linha  estou  inserindo
     XOR CX,CX       ;Limpo o CX para saber a posição que estou e somar em DI
     MOV CL,[SI]
     ADD DI,CX
-    MOV CH,25           ;Seto o limitador de caracter em 25
+    MOV CH,20           ;Seto o limitador de caracter em 20
 
     MOV AH,09       
     LEA DX,MSG_INSERIR_NOME     ;Print da mensagem
@@ -165,10 +185,11 @@ INSERIR_ALUNO PROC
         JNE @INSERIR_NOME
     
     @AUX_INSERIR:       ;Intermediario entre nome e nota
-        ADD [SI],25     ;Seto o contador da inserçãoo de nome para a proxima posição
-        LEA SI,Cadastro_Nota
+        MOV CH,20
+        ADD [SI],CH     ;Seto o contador da inserçãoo de nome para a proxima posição
+        LEA SI,Cadastro_Nota        ;Aponto SI para o contador de nota
         XOR BX,BX       ;Seto as linhas em BX de acordo com o contador
-        MOV BL,[SI]     
+        MOV BL,[SI]     ;Coloco em BX a linha que precisa a inserção
         XOR DI,DI       ;Seto colunas
         MOV CH,3       ;Definindo o limitador
 
@@ -180,34 +201,184 @@ INSERIR_ALUNO PROC
         INT 21H     
         MOV AH,01       ;Leio o caracter
         INT 21H
-        CMP AL,'0'      ;Verifico se  é um numero, se nao vai pro erro
+        AND AL,0FH   
+        CMP AL,0      ;Verifico se  é um numero, se nao vai pro erro
         JL @ERRO_INSERIR
-        CMP AL,'9'
-        JA @ERRO_INSERIR
+        CMP AL,9
+        JG @ERRO_INSERIR
         MOV Notas[BX+DI],AL     ;Se for numero insiro na matriz
         INC DI                  ;Vou para a proxima coluna
         DEC CH                  ;Decremento o contador limite
         JNZ @INSERIR_NOTA
     
-    ADD [SI],4  ;Pulo o contador de linhas para a proxima linha
+    INC Cadastro_Aluno
+    MOV CH,4
+    ADD [SI],CH  ;Pulo o contador de linhas para a proxima linha
+    PULA_LINHA
+    PULA_LINHA
     RET
-
-    @ERRO_INSERIR:
-        PULA_LINHA
+    @FIM_SEM_ESPAÇO:
         PULA_LINHA
         MOV AH,09           ;Impressao mensagem erro
-        LEA DX,MSG_ERROR    
+        LEA DX,MSG_ESPACO    
         INT 21H
         PULA_LINHA
+        RET
+    @ERRO_INSERIR:
+        PULA_LINHA
+        MOV AH,09           ;Impressao mensagem erro
+        LEA DX,MSG_ERROR_NUMERO    
+        INT 21H
         PULA_LINHA
         JMP @INSERIR_NOTA
 INSERIR_ALUNO ENDP
 
-CORRIGIR_NOTAS PROC
-    RET
-CORRIGIR_NOTAS ENDP
-
 IMPRIMIR_TABELA PROC
+    ; CH -> Contador Nome e  para as notas
+    ; CL -> Contador para impressao
+    ; BX -> Contador de linhas
+    PULA_LINHA          ;Pula 2 linhas
+    PULA_LINHA
+    GUARDA_4REG AX,BX,CX,DX
+    LEA SI,Nomes
+    MOV CL,Cadastro_Aluno[0]
+    CLD
+    MOV AH,09
+    LEA DX,MSG_IMPRESSAO
+    INT 21H
+    XOR DI,DI
+    PULA_LINHA
+    @IMPRESAO:
+        PULA_LINHA
+        MOV AH,02
+        MOV CH,20
+        SPACE
+        IMPRESSAO_NOME:
+            LODSB           ;Copio o caracter que SI aponta
+            MOV DL,AL        ;Jogo para DL e printo
+            INT 21H
+            DEC CH
+            JNZ IMPRESSAO_NOME
+        MOV CH,4
+        CALL CALCULO_MEDIA
+        XOR BX,BX
+        IMPRESSAO_NOTA:
+            MOV DL,Notas[DI+BX]
+            OR DL,30H
+            INT 21H
+            INC BX
+            TAB
+            TAB
+            DEC CH
+            JNZ IMPRESSAO_NOTA
+        ADD DI,4
+        DEC CL
+        JNZ @IMPRESAO
+    SOLTA_4REG AX,BX,CX,DX
     RET
 IMPRIMIR_TABELA ENDP
+
+CALCULO_MEDIA PROC
+    ; BX -> Colunas
+    ; AX -> Somatoria
+    ; DX -> Intermediario para somatoria
+    ; DI -> A linha
+    ; AL ->dividendo
+    GUARDA_4REG AX,BX,CX,DI
+    XOR AX,AX
+    XOR DX,DX   ;Zerando DX pra somatoria
+    MOV CH,3     ;Contador pra somatoria
+    XOR BX,BX    ;Reset das colunas
+    @SOMA_NOTAS:
+        MOV DL,Notas[DI+BX]
+        ADD AX,DX
+        INC BX
+        DEC CH
+        JNZ @SOMA_NOTAS
+    MOV CH,3    ;Setando divisor
+    DIV CH
+    MOV Notas[BX+DI],AL     ;Guardo o dividendo na posição da media na matriz de Notas
+    SOLTA_4REG AX,BX,CX,DI
+    RET
+CALCULO_MEDIA ENDP
+
+CORRIGIR_NOTAS PROC
+    ;DL -> Limite de repetição, de acordo com quantos alunos ja foram inseridos
+    ;DH -> linha da matriz de nota
+
+    XOR DH,DH
+    MOV AH,09
+    LEA DX,MSG_CORRECAO
+    INT 21H            ;Printo a mensagem
+    MOV CX,20           ;Seto o contador para 20 max
+    LEA DI,Nome_Correcao          ;Aponto DI para o começo da string_lida
+    CLD                 ;Seto o DF
+    MOV AH,01
+    INT 21H         ;Leio caracter
+    @REP_CORRECAO_LER:
+        CMP AL,0DH          ;Verifico se é enter, se for termina a leitura
+        JE @AUX_CORRECAO     
+        CMP AL,08h          ;Verifico se é backspace, para corrigir, se nao for pula para @caracter
+        JNE @CARACTER_CORRECAO
+        INC CX              ;Incrementa o contador para que ele seja subtraido denovo no LOOP
+        DEC DI          ;Volto DI para a posição interior
+        JMP @REP_CORRECAO
+    @CARACTER_CORRECAO:     STOSB           ;Guardo o caracter na string_lida
+    @REP_CORRECAO:
+        INT 21H         ;Leio outro caracter e faço o loop
+        LOOP @REP_CORRECAO_LER
+
+    @AUX_CORRECAO:
+        XOR DH,DH
+        LEA SI,Nomes      ;Aponto SI para string_lida
+        MOV DL,Cadastro_Aluno[0]
+    @VERIFICA:
+        LEA DI,Nome_Correcao           ;Aponto DI para o começo do nome inserido
+        MOV CX,20       ;Seto o contador pra 20
+        REPE CMPSB          ;E comparo enquanto for igual 
+        JZ @INSERIR_NOTA_NOVA
+        ADD DH,4
+        DEC DL
+        JNZ @VERIFICA
+        JMP @ERRO_NOME
+
+    @INSERIR_NOTA_NOVA:
+        XOR BX,BX       ;Seto as linhas em BX de acordo com o contador
+        MOV BL,DH    ;Coloco em BX a linha que precisa a inserção
+        XOR DI,DI       ;Seto colunas
+        MOV CH,3       ;Definindo o limitador
+
+    @INSERIR_NOTA_CORRIGIDA:
+        PULA_LINHA      ;Pulo 2 linhas
+        PULA_LINHA
+        MOV AH,09           ;Imprimir mensagem da nota
+        LEA DX,MSG_INSERIR_NOTA
+        INT 21H     
+        MOV AH,01       ;Leio o caracter
+        INT 21H
+        AND AL,0FH   
+        CMP AL,0      ;Verifico se  é um numero, se nao vai pro erro
+        JL @ERRO_INSERIR_NOTA
+        CMP AL,9
+        JG @ERRO_INSERIR_NOTA
+        MOV Notas[BX+DI],AL     ;Se for numero insiro na matriz
+        INC DI                  ;Vou para a proxima coluna
+        DEC CH                  ;Decremento o contador limite
+        JNZ @INSERIR_NOTA_CORRIGIDA
+
+        RET
+    @ERRO_INSERIR_NOTA:
+        PULA_LINHA
+        MOV AH,09           ;Impressao mensagem erro
+        LEA DX,MSG_ERROR_NUMERO    
+        INT 21H
+        PULA_LINHA
+        JMP @INSERIR_NOTA_CORRIGIDA
+    @ERRO_NOME:
+        MOV AH,09
+        LEA DX,MSG_ERRO_NOME
+        INT 21H
+
+    RET
+CORRIGIR_NOTAS ENDP
 END MAIN
