@@ -1,5 +1,5 @@
 .MODEL SMALL
-LIMPA_TELA MACRO
+LIMPA_TELA MACRO            ;Macro para limpar tela
     GUARDA_4REG AX,BX,CX,DX
     MOV AX,03h
     INT 10h
@@ -21,13 +21,16 @@ LIMPA_TELA MACRO
 
     SOLTA_4REG AX,BX,CX,DX
     ENDM
-PAUSE  MACRO
-    PUSH AX
+PAUSE  MACRO        ;Macro para pausar e esperar o usuario apertar enter
+    GUARDA_2REG AX,DX 
     MOV AH,01
     INT 21H
-    POP AX
+    MOV AH,02h
+    MOV DL,08h
+    INT 21h
+    SOLTA_2REG AX,DX
     ENDM
-PULA_LINHA MACRO
+PULA_LINHA MACRO        ;Macro para pular uma linha
     GUARDA_2REG AX,DX
     MOV AH,02
     MOV DL,10
@@ -36,35 +39,35 @@ PULA_LINHA MACRO
     INT 21H
     SOLTA_2REG AX,DX
     ENDM
-TAB MACRO
+TAB MACRO               ;Macro para dar tab
     GUARDA_2REG AX,DX
     MOV AH,02
     MOV DL,9
     INT 21H
     SOLTA_2REG AX,DX
     ENDM
-SPACE MACRO
+SPACE MACRO             ;Macro para dar um espaço
     GUARDA_2REG AX,DX
     MOV AH,02
     MOV DL,20H
     INT 21H
     SOLTA_2REG AX,DX
     ENDM
-GUARDA_2REG MACRO AUX,AUX2
+GUARDA_2REG MACRO AUX,AUX2      ;Macro para guardar 2 registradores
     PUSH AUX
     PUSH AUX2
     ENDM
-GUARDA_4REG MACRO AUX,AUX2,AUX3,AUX4
+GUARDA_4REG MACRO AUX,AUX2,AUX3,AUX4        ;Macro para guardar 4 registradores
     PUSH AUX
     PUSH AUX2
     PUSH AUX3
     PUSH AUX4
     ENDM
-SOLTA_2REG MACRO AUX,AUX2
+SOLTA_2REG MACRO AUX,AUX2       ;Macro para voltar 2 registradores
     POP AUX2
     POP AUX
     ENDM
-SOLTA_4REG MACRO AUX,AUX2,AUX3,AUX4
+SOLTA_4REG MACRO AUX,AUX2,AUX3,AUX4     ;Macro para voltar 4 registradores
     POP AUX4
     POP AUX3
     POP AUX2
@@ -84,15 +87,15 @@ SOLTA_4REG MACRO AUX,AUX2,AUX3,AUX4
             DW 4 DUP(?)
             DW 4 DUP(?)
     
-    Pesos DB 3 DUP(1)
+    Pesos DB 3 DUP(1)       ;Vetor para armazenar os pesos
     
-    Cadastro_Aluno DB 0         ;Contador de quantos alunos foram inseridos, para a impressao
+    Cadastro_Aluno DB 0         ;Contador de quantos alunos foram inseridos, para a impressao e para verificação do limite
     Cadastro_Nome DB 0           ;Contador de  insersão de  aluno (para saber em qual posição estou, na string de Nome)
     Cadastro_Nota DB 0           ;Contador de  insersão de  nota  (para saber em qual linha  estou da matriz)
-    Cadastro_Peso DB 0
-    Nome_Correcao DB 20 DUP(?)
+    Cadastro_Peso DB 0          ;Variavel para saber se faço uma media aritmetica ou ponderada
+    Nome_Correcao DB 20 DUP(?)      ;Vetor para a string na função de corrigir nota, para comparar
 
-    MSG_MENU    DB ' Escolha uma das opcoes: '
+    MSG_MENU    DB ' Escolha uma das opcoes: '              ;Todas as mensagens de erro ou de inserção e de menu
                 DB 10,10,13,9,' 1- Inserir um aluno'
                 DB 10,13,9,' 2- Imprimir as notas'
                 DB 10,13,9,' 3- Corrigir as notas'
@@ -125,12 +128,12 @@ SOLTA_4REG MACRO AUX,AUX2,AUX3,AUX4
     MSG_ERRO_NENHUM DB 9,'Nao tem nenhum aluno inserido!$'
 .CODE
 MAIN PROC
-    MOV AX,@DATA
+    MOV AX,@DATA            ;Importando o endereço de data para DS e ES
     MOV DS,AX
     MOV ES,AX
 
     REPEAT_MENU:
-        LIMPA_TELA
+        LIMPA_TELA      ;Limpa tela e pula uma linha
         PULA_LINHA
         MOV AH,09       ;Print Menu
         LEA DX,MSG_MENU
@@ -141,20 +144,20 @@ MAIN PROC
         JL ERRO         ;Se  menor que 0 ja da erro
         JE FIM          ;Se for igual, ja finaliza
         CMP AL,'4'
-        JA ERRO         ;Se  menor que 3 ja da erro
+        JA ERRO         ;Se  maior que 4 da erro
         CMP AL,'1'
         JNE @OPCAO2         ;Se nao for igual a 1, vai para a verificação 2
         CALL INSERIR_ALUNO  ;Se for 1, ja chama a função
         JMP REPEAT_MENU
     @OPCAO2:
         CMP AL,'2'
-        JNE @OPCAO3     ;Se nao for igual a 2, vai para a opção 3 automaticamente
+        JNE @OPCAO3     ;Se nao for igual a 2, vai para a verificação 3 
         CALL IMPRIMIR_TABELA     ;Se for 2, ja chama a função
         JMP REPEAT_MENU
      @OPCAO3:
         CMP AL,'3'
-        JNE @OPCAO4     ;Se nao for igual a 3, vai para a opção 4 automaticamente
-        CALL CORRIGIR_NOTAS       ;Chama a função para 3
+        JNE @OPCAO4         ;Se nao for igual a 3, vai para a opção 4 
+        CALL CORRIGIR_NOTAS       ;Se for 2, ja chama a função
         JMP REPEAT_MENU
     @OPCAO4:
         CALL PESO       ;Consequentemente, chama a função para 4
@@ -167,7 +170,7 @@ MAIN PROC
         PAUSE
         JMP REPEAT_MENU
     FIM:
-        MOV AH,4CH
+        MOV AH,4CH      ;Finalização do codigo
         INT 21H
 MAIN ENDP
 
@@ -175,23 +178,23 @@ INSERIR_ALUNO PROC
     ;   DI -> guardar as posições do nome
     ;   SI -> guarda os cadastros , que sao manipulados por  CL
     ;   CH -> Limitador de caracter
-    LIMPA_TELA
+    LIMPA_TELA              ;Limpa tela
     CMP Cadastro_Aluno,5    ;Verificalçao se atingiu o limite de alunos
-    JNGE @INSERIR
+    JNGE @INSERIR           ;Se nao tiver atingido insere normal, se tiver vai para o erro de @FIM_SEM_ESPAÇO
     JMP @FIM_SEM_ESPAÇO
     @INSERIR:
     PULA_LINHA          ;Pula 2 linhas
-    MOV AH,09
+    MOV AH,09                   ;Print da mensagem
     LEA DX,MSG_INSERIR_DADOS
     INT 21H
-    PULA_LINHA
+    PULA_LINHA      ;Pula 2 linhas
     PULA_LINHA
     CLD                 ;Seto o DF
-    LEA DI,Nomes        ;Seto o DI
-    LEA SI,Cadastro_Nome     ;Vejo em qual linha  estou  inserindo
-    XOR CX,CX       ;Limpo o CX para saber a posição que estou e somar em DI
-    MOV CL,[SI]
-    ADD DI,CX
+    LEA DI,Nomes        ;Seto o DI para o vetor de Nomes
+    LEA SI,Cadastro_Nome     ;Vejo em qual posição  estou  inserindo
+    XOR CH,CH       ;Limpo CH para colocar a posição em DI
+    MOV CL,[SI]             ;Pego a posição
+    ADD DI,CX       
     MOV CH,20           ;Seto o limitador de caracter em 20
 
     MOV AH,09       
@@ -201,17 +204,17 @@ INSERIR_ALUNO PROC
     INT 21H
 
     @INSERIR_NOME:
-        CMP AL,0DH      ;Verificar se é ENTER e sair  se for
-        JE @AUX_INSERIR
+        CMP AL,0DH      ;Verificar se é ENTER
+        JE @AUX_INSERIR     ;se for sai
         CMP AL,08h      ;Verifica  se é BACKSPACE, se for vai voltar um na string
         JNE @CARACTER   ;Se nao ele insere na string e repete
         SPACE
         GUARDA_2REG AX,DX
-        MOV AH,02
+        MOV AH,02           ;Printar um espaço e outro backspace para apagar a letra no visor
         MOV DL,08h
         INT 21H
         SOLTA_2REG AX,DX
-        DEC DI
+        DEC DI              ;Volta uma posição do vetor
         JMP @VOLTA_LER      ;Le de novo
     @CARACTER:  
         STOSB           ;Guardo  o caracter no vetor de nomes
@@ -223,22 +226,21 @@ INSERIR_ALUNO PROC
     
     @AUX_INSERIR:       ;Intermediario entre nome e nota
         MOV CH,20
-        ADD [SI],CH     ;Seto o contador da inserçãoo de nome para a proxima posição
+        ADD [SI],CH     ;Seto o contador da inserção de nome para a proxima posição
         LEA SI,Cadastro_Nota        ;Aponto SI para o contador de nota
         XOR BX,BX       ;Seto as linhas em BX de acordo com o contador
         MOV BL,[SI]     ;Coloco em BX a linha que precisa a inserção
         XOR DI,DI       ;Seto colunas
         MOV CH,3       ;Definindo o limitador
-
-    @INSERIR_NOTA:
         PULA_LINHA      ;Pulo 2 linhas
         PULA_LINHA
+    @INSERIR_NOTA:
         MOV AH,09           ;Imprimir mensagem da nota
         LEA DX,MSG_INSERIR_NOTA
         INT 21H
-        PUSH BX
-        XOR BX,BX
-        MOV DH,2     
+        PUSH BX     ;Guardo em qual linha estou
+        XOR BX,BX   ;Seto o total
+        MOV DH,2     ;Limite de 2 caracteres
         MOV AH,01       ;Leio o caracter
         INT 21H
     @auxINSERIR_NOTA:
@@ -248,29 +250,30 @@ INSERIR_ALUNO PROC
         JLE @continua
         JMP @ERRO_INSERIR
     @continua:
-        AND AX,000FH
-        PUSH AX
-        MOV AX,10
-        MUL BX
-        POP BX
-        ADD BX,AX
+        AND AX,000FH        ;Transformo em numero
+        PUSH AX         ;Guardo o numero na pilha
+        MOV AX,10       ;Seto o multiplicador
+        MUL BX          ;Faço totalx10
+        POP BX          ;Volta o numero para bx
+        ADD BX,AX       ;Faço o totalx10 + o numero
+        CMP BX,1
+        JNE @aux2INSERIR_NOTA       ;Se nao for igual a 1 vai ja inserir
         MOV AH,01
-        INT 21H
-        CMP AL,13
+        INT 21H         ;Se for um leio outro numero
+        CMP AL,13               ;Verifico se é enter, se for guarda a nota e vai para o proximo
         JE @aux2INSERIR_NOTA
-        DEC DH
-        JZ @aux2INSERIR_NOTA
-        JMP @auxINSERIR_NOTA
+        JMP @auxINSERIR_NOTA    ;Se nao, leio de novo
     @aux2INSERIR_NOTA:
-        MOV AX,BX
-        POP BX
-        MOV Notas[BX+DI],AX     ;Se for numero insiro na matriz
+        MOV AX,BX           ;Coloco o valor em AX
+        POP BX          ;Volto a quantidade de linhas
+        MOV Notas[BX+DI],AX     ;Insiro na matriz
         ADD DI,2                  ;Vou para a proxima coluna
+        PULA_LINHA      ;Pulo 2 linhas
         DEC CH                  ;Decremento o contador limite
         JNZ @INSERIR_NOTA
     
-    INC Cadastro_Aluno
-    MOV CH,8
+    INC Cadastro_Aluno      ;Aumento a quantidade de aluno cadastrado em 1
+    MOV CH,8            
     ADD [SI],CH  ;Pulo o contador de linhas para a proxima linha
     RET
     @FIM_SEM_ESPAÇO:
@@ -295,45 +298,44 @@ IMPRIMIR_TABELA PROC
     ; CL -> Contador para impressao
     ; BX -> Contador de linhas
     GUARDA_4REG AX,BX,CX,DX
-    LIMPA_TELA
+    LIMPA_TELA      ;Limpo tela e pulo uma linha
     PULA_LINHA
-    XOR SI,SI
-    MOV CL,Cadastro_Aluno[SI]
-    CMP CL,0
-    JNE @continua_impressao
+    XOR SI,SI           ;Seto SI para 0
+    MOV CL,Cadastro_Aluno[SI]       ;Verifico quantos alunos foram cadastrados
+    CMP CL,0        
+    JNE @continua_impressao     ;Se for 0 da erro e fala que n tem nenhum
     JMP ERRO_ALUNO
     @continua_impressao:
-    LEA SI,Nomes
-    MOV CL,Cadastro_Aluno
-    CLD
-    MOV AH,09
-    LEA DX,MSG_IMPRESSAO
+    LEA SI,Nomes            ;Aponto SI para Nomes
+    MOV CL,Cadastro_Aluno       ;Seto contador para a quantidade de alunos registrados
+    CLD     ;Seto o DF
+    MOV AH,09   
+    LEA DX,MSG_IMPRESSAO        ;Print da menu da impressao
     INT 21H
-    XOR DI,DI
+    XOR DI,DI       ;Seto as linhas da matriz
     PULA_LINHA
     @IMPRESAO:
         PULA_LINHA
-        MOV AH,02
-        MOV CH,20
+        MOV AH,02   ;Seto AH para imprimir
+        MOV CH,20   ;Seto contador para 20
         SPACE
         IMPRESSAO_NOME:
             LODSB           ;Copio o caracter que SI aponta
             MOV DL,AL        ;Jogo para DL e printo
             INT 21H
             DEC CH
-            JNZ IMPRESSAO_NOME
-        MOV CH,4
-        CALL CALCULO_MEDIA
-        XOR BX,BX
+            JNZ IMPRESSAO_NOME      ;Faço isso 20x
+        MOV CH,4        ;Seto contador de print de nota para 4
+        CALL CALCULO_MEDIA      ;Calculo a media
+        XOR BX,BX           ;Zero as colunas
         @auxIMPRIMIR_NOTA:
             MOV AX,Notas[DI+BX]     ;Pego o valor
-            PUSH CX         
-            PUSH BX             ;Colunas
+            PUSH CX         ;Guardo o contador
+            PUSH BX             ;Guardo as colunas
             MOV BX,10           ;Seto o divisor
-
             XOR CX,CX       ;Contador de digitos
         CALCULO_NOTA:
-            XOR DX,DX
+            XOR DX,DX       ;Divido o valor por 10 ate ser 0 e guardo na pilha
             DIV BX
             PUSH DX
             INC CH
@@ -341,27 +343,27 @@ IMPRIMIR_TABELA PROC
             JNZ CALCULO_NOTA
         MOV AH,02
         IMPRESSAO_NOTA:
-            POP DX
+            POP DX          ;Vou tirando da pilha e printando
             OR DL,30H
             INT 21H
             DEC CH
             JNZ IMPRESSAO_NOTA
-            POP BX
-            ADD BX,2
+            POP BX          ;Volto o valor de colunas
+            ADD BX,2        ;Vou para a proxima coluna
+            TAB         ;Dou tabs para formatação
             TAB
-            TAB
-            POP CX
+            POP CX      ;Volto o contador
             DEC CH
-            JNZ @auxIMPRIMIR_NOTA
-        ADD DI,8
+            JNZ @auxIMPRIMIR_NOTA       ;Faço 4x
+        ADD DI,8    ;Vou para a proxima linha da matriz de notas
         DEC CL
-        JNZ @IMPRESAO
+        JNZ @IMPRESAO       ;Repito a quantidade de alunos registrados
     PAUSE
     SOLTA_4REG AX,BX,CX,DX
     RET
     ERRO_ALUNO:
         LIMPA_TELA
-        PULA_LINHA
+        PULA_LINHA      ;Print de erro de nenhum aluno e da RET
         MOV AH,09
         LEA DX,MSG_ERRO_NENHUM
         INT 21H
@@ -376,38 +378,39 @@ CALCULO_MEDIA PROC
     ; AX -> Intermediario para somatoria
     ; DI -> A linha
     ; AL ->dividendo
-    GUARDA_4REG AX,BX,CX,DX
+    GUARDA_4REG AX,BX,CX,DX     ;Guarda registradores
     PUSH SI
 
-    XOR DX,DX       ;Somatoria
-    MOV CH,3     ;Contador pra somatoria
-    XOR SI,SI
-    XOR BX,BX    ;Reset das colunas
+    XOR DX,DX       ;Seto a somatoria
+    MOV CH,3        ;Contador pra somatoria
+    XOR SI,SI       ;Seto SI para pegar os pesos
+    XOR BX,BX       ;Reset das colunas
     @SOMA_NOTAS:
-        MOV CL,Pesos[SI]
-        MOV AX,Notas[DI+BX]
-        MUL CL
-        ADD DX,AX
-        ADD BX,2
-        INC SI
-        DEC CH
-        JNZ @SOMA_NOTAS
-    MOV AX,DX
+        MOV CL,Pesos[SI]        ;Pego o valor do peso, guardo em CL e o valor do nota, guardo em AX
+        MOV AX,Notas[DI+BX]     
+        MUL CL          ;Multiplico a nota pelo peso
+        ADD DX,AX       ;Somo na somatoria
+        ADD BX,2        ;Vou para a proxima coluna
+        INC SI          ;Vou para o proximo peso
+        DEC CH  
+        JNZ @SOMA_NOTAS     ;Repito 3x
+
+    MOV AX,DX       ;Guardo a somatoria em AX
     XOR SI,SI
-    CMP Cadastro_Peso[SI],0
+    CMP Cadastro_Peso[SI],0     ;Verifico se alterou os pesos, se nao faço aritimetica
     JE @MediaAritmetica
      @MediaPonderada:
-         MOV CH,10
+         MOV CH,10      ;Seto o divisor para 10 caso seja ponderada
          JMP @FIM_Media
     @MediaAritmetica:
-        MOV CH,3    ;Setando divisor
+        MOV CH,3    ;Setando divisor para 3 se for aritmetica
     @FIM_Media:
-        DIV CH
-        XOR AH,AH
+        DIV CH          ;Divido 
+        XOR AH,AH       ;Zero o valor do resto
         MOV Notas[DI+BX],AX     ;Guardo o dividendo na posição da media na matriz de Notas
 
     POP SI
-    SOLTA_4REG AX,BX,CX,DX
+    SOLTA_4REG AX,BX,CX,DX      ;Volto os registradores
     RET
 CALCULO_MEDIA ENDP
 
@@ -416,10 +419,10 @@ CORRIGIR_NOTAS PROC
     ;DH -> linha da matriz de nota
     LIMPA_TELA
     PULA_LINHA
-    XOR SI,SI
-    MOV CL,Cadastro_Aluno[SI]
+    XOR SI,SI       
+    MOV CL,Cadastro_Aluno[SI]       ;Verifico quantos alunos foram cadastrados
     CMP CL,0
-    JNE @continua_correcao
+    JNE @continua_correcao      ;Se for 0 da erro e fala que n tem nenhum
     JMP @ERRO_ALUNO_CORRIGIR
     @continua_correcao:
     MOV AH,09
@@ -529,42 +532,47 @@ CORRIGIR_NOTAS PROC
  CORRIGIR_NOTAS ENDP
 
 PESO PROC
-    GUARDA_4REG AX,BX,CX,DX
+    GUARDA_4REG AX,BX,CX,DX     ;Guardo registradores
     PUSH DI
-        LIMPA_TELA
+        LIMPA_TELA      ;Limpa tela e pula
         PULA_LINHA
         MOV AH,09
-        LEA DX,MSG_INSERIR_PESOS
+        LEA DX,MSG_INSERIR_PESOS        ;Print da mensagem
         INT 21H
-        LEA DI,Pesos
-        CLD
+
+        LEA DI,Pesos    ;Aponto DI para pesos
+        CLD             ;Seto DF
+
         MOV DL,31H       ;Contador das provas para print
         MOV CX,3        ;Contador do loop de pesos
         @INSERIR_PESOS:
             PULA_LINHA
-            PUSH DX
+            PUSH DX         ;Guardo em qual prova estau
             MOV AH,09
-            LEA DX,MSG_INSERIR_PESO
+            LEA DX,MSG_INSERIR_PESO     ;Printa mensagem
             INT 21H
-            POP DX
-            MOV AH,02
+
+            POP DX      ;Volto o numero da prova
+            MOV AH,02  ;Printo em que prova
             INT 21H
-            PUSH DX
-            MOV DL,':'
+            PUSH DX     ;Guardo em qual prova estau
+
+            MOV DL,':'      ;Print ':'
             INT 21H
-            POP DX
+            POP DX      ;Volto o numero da prova
             SPACE
-            MOV AH,01
+
+            MOV AH,01       ;Leio o peso
             INT 21H
-            AND AL,0FH
-            STOSB
+            AND AL,0FH      ;Transformo em numero
+            STOSB           ;Guardo no vetor
             INC DL
-            LOOP @INSERIR_PESOS
+            LOOP @INSERIR_PESOS     ;Repito 3x
         LEA DI,Cadastro_Peso
         MOV CL,1
-        MOV [DI],CL
+        MOV [DI],CL     ;Mudo o cadastro de peso para 1
     POP DI
-    SOLTA_4REG AX,BX,CX,DX
+    SOLTA_4REG AX,BX,CX,DX      ;Volto registradores
     RET
 PESO ENDP
 END MAIN
