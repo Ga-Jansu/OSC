@@ -4,12 +4,14 @@
     ENTRADA DB "Digite um vetor de 7 posicoes: $"   ;Mensagens para o usuario
     INVERSO DB 10,13,"O inverso eh: $"
     VETOR DB 7 DUP (?)      ;Criando o vetor com 7 elementos zerados
+    MESSAGE DB 'Hello, World!$' ; String a ser impressa, terminada com 0
 .CODE
 MAIN PROC
     MOV AX,@DATA
     MOV DS,AX
     
     CALL LERVET
+    CALL OLA
     CALL INVERTEVET
     CALL IMPRIMIRVET
 
@@ -95,4 +97,78 @@ IMPRIMIRVET PROC
     POP AX
     RET         ;Volta para a main
 IMPRIMIRVET ENDP
+
+OLA  PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV AH, 0 ; Seta o modo de vídeo para 80x25 texto, 16 cores
+
+    MOV AL, 16 ; AL deve ser igual a AH
+
+    INT 10h ; Chama a BIOS de vídeo
+
+    MOV AH, 0Ch ; Seta a função para escrever um pixel
+    MOV AL, 4 ; Escolhe a cor roxa (azul 1 e vermelho 1)
+    MOV CX, 1 ; Coluna inicial da caixa
+    MOV DX, 1 ; Linha inicial da caixa
+    MOV BX, 320 ; Comprimento da caixa (largura da tela)
+
+    ; Desenha a linha superior da caixa roxa
+    DrawTop:
+    MOV SI, BX ; Salva o comprimento da caixa em SI
+    DrawTopLine:
+    INT 10h ; Desenha o pixel na posição atual
+    INC CX ; Avança para a próxima coluna
+    DEC SI ; Decrementa o contador da linha
+    JNZ DrawTopLine ; Continua a desenhar a linha superior
+
+    ; Desenha a linha inferior da caixa roxa
+    MOV SI, BX ; Salva o comprimento da caixa em SI
+    MOV CX, 1 ; Coluna inicial da caixa
+    MOV DX, 321 ; Linha final da caixa
+
+    DrawBottom:
+    MOV SI, BX ; Salva o comprimento da caixa em SI
+    DrawBottomLine:
+    INT 10h ; Desenha o pixel na posição atual
+    INC CX ; Avança para a próxima coluna
+    DEC SI ; Decrementa o contador da linha
+    JNZ DrawBottomLine ; Continua a desenhar a linha inferior
+
+    ; Desenha os lados da caixa roxa
+    MOV SI, 320 ; Salva a largura da tela em SI
+    MOV CX, 1 ; Coluna inicial da caixa
+    MOV DX, 2 ; Linha inicial da caixa
+
+    DrawSides:
+    MOV SI, 320 ; Salva a largura da tela em SI
+    MOV AH, 0Ch ; Seta a função para escrever um pixel
+    MOV AL, 4 ; Escolhe a cor roxa (azul 1 e vermelho 1)
+    MOV BX, DX ; Salva a linha atual em BX
+
+    DrawSide:
+    INT 10h ; Desenha o pixel na posição atual
+    INC CX ; Avança para a próxima coluna
+    INC DX ; Avança para a próxima linha
+    DEC SI ; Decrementa o contador da altura
+    JNZ DrawSide ; Continua a desenhar o lado da caixa roxa
+
+    MOV DX, BX ; Restaura a linha atual a partir de BX
+    INC DX ; Avança para a próxima linha
+    DEC SI ; Decrementa o contador da altura
+    JNZ DrawSides ; Continua a desenhar os lados da caixa roxa
+
+    ; Printa a mensagem na caixa roxa
+    MOV AH, 9 ; Seta a função para imprimir uma string
+    MOV DX, offset MESSAGE ; Ponteiro para a string a ser impressa
+    INT 21h ; Chama a função de interrupção do DOS
+
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+OLA ENDP
 END MAIN
