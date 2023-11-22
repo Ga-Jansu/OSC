@@ -50,18 +50,9 @@ SPACE MACRO
     INT 21H
     SOLTA_2REG AX,DX
     ENDM
-
-GUARDA_1REG MACRO AUX
-    PUSH AUX
-    ENDM
 GUARDA_2REG MACRO AUX,AUX2
     PUSH AUX
     PUSH AUX2
-    ENDM
-GUARDA_3REG MACRO AUX,AUX2,AUX3
-    PUSH AUX
-    PUSH AUX2
-    PUSH AUX3
     ENDM
 GUARDA_4REG MACRO AUX,AUX2,AUX3,AUX4
     PUSH AUX
@@ -69,15 +60,7 @@ GUARDA_4REG MACRO AUX,AUX2,AUX3,AUX4
     PUSH AUX3
     PUSH AUX4
     ENDM
-SOLTA_1REG MACRO AUX
-    POP AUX
-    ENDM
 SOLTA_2REG MACRO AUX,AUX2
-    POP AUX2
-    POP AUX
-    ENDM
-SOLTA_3REG MACRO AUX,AUX2,AUX3
-    POP AUX3
     POP AUX2
     POP AUX
     ENDM
@@ -222,6 +205,12 @@ INSERIR_ALUNO PROC
         JE @AUX_INSERIR
         CMP AL,08h      ;Verifica  se é BACKSPACE, se for vai voltar um na string
         JNE @CARACTER   ;Se nao ele insere na string e repete
+        SPACE
+        GUARDA_2REG AX,DX
+        MOV AH,02
+        MOV DL,08h
+        INT 21H
+        SOLTA_2REG AX,DX
         DEC DI
         JMP @VOLTA_LER      ;Le de novo
     @CARACTER:  
@@ -446,6 +435,12 @@ CORRIGIR_NOTAS PROC
         JE @AUX_CORRECAO     
         CMP AL,08h          ;Verifico se é backspace, para corrigir, se nao for pula para @caracter
         JNE @CARACTER_CORRECAO
+        SPACE
+        GUARDA_2REG AX,DX
+        MOV AH,02
+        MOV DL,08h
+        INT 21H
+        SOLTA_2REG AX,DX
         INC CX              ;Incrementa o contador para que ele seja subtraido denovo no LOOP
         DEC DI          ;Volto DI para a posição interior
         JMP @REP_CORRECAO
