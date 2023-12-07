@@ -1,0 +1,7 @@
+.MODEL SMALL
+.STACK 100h
+.DATA
+
+    N DB 9
+    VETOR DB 9 DUP(?)
+    MSG 

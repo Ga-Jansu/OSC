@@ -456,12 +456,17 @@ CORRIGIR_NOTAS PROC
         XOR DI,DI
         LEA SI,Nomes      ;Aponto SI para string_lida
         MOV DL,Cadastro_Aluno[DI]
+        XOR AX,AX
+        LEA DI,Nome_Correcao
+        CLD
     @VERIFICA:
-        LEA DI,Nome_Correcao           ;Aponto DI para o começo do nome inserido
+        XOR DI,DI
         MOV CX,20       ;Seto o contador pra 20
+        MOV SI,AX
         REPE CMPSB          ;E comparo enquanto for igual 
         JZ @INSERIR_NOTA_NOVA
         ADD DH,8
+        ADD AX,20
         DEC DL
         JNZ @VERIFICA
         JMP @ERRO_NOME
